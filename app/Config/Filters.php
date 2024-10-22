@@ -68,16 +68,14 @@ class Filters extends BaseFilters
      * @var array<string, array<string, array<string, string>>>|array<string, list<string>>
      */
     public array $globals = [
-        'before' => [
-            // 'honeypot',
-            // 'csrf',
-            // 'invalidchars',
-        ],
-        'after' => [
-            // 'honeypot',
-            // 'secureheaders',
-        ],
-    ];
+    'before' => [
+        // 'csrf' => ['except' => ['api/*']],
+        'cors', // Enable CORS globally
+    ],
+    'after' => [
+        'toolbar',
+    ],
+];
 
     /**
      * List of filter aliases that works on a
@@ -93,7 +91,9 @@ class Filters extends BaseFilters
      * @var array<string, list<string>>
      */
     public array $methods = [
-        'POST' => ['csrf'],
+        // 'POST' => ['csrf' => ['except' => ['api/*']]],
+        // 'PUT' => ['csrf' => ['except' => ['api/*']]],
+        // 'PATCH' => ['csrf' => ['except' => ['api/*']]],
     ];
 
     /**

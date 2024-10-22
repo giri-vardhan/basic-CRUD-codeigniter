@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers;
 
 // use App\Models\ProductModel;
@@ -7,14 +6,15 @@ namespace App\Controllers;
 use App\Models\ProductModel;
 use CodeIgniter\RESTful\ResourceController;
 
-class ProductController extends ResourceController
+class Products extends ResourceController
 {
-    protected $model;
-    protected $format = 'json';
+    // protected $model;
+    protected $modelName = ProductModel::class;
+    // protected $format = 'json';
 
-    public function __construct(){
-        $this->model = new ProductModel();
-    }
+    // public function __construct(){
+    //     $this->model = new ProductModel();
+    // }
     public function index()
     {
         $products = $this->model->findAll();
@@ -36,7 +36,8 @@ class ProductController extends ResourceController
 
     public function create()
     {
-        $data = $this->request->getPost(); // Get POST data
+        $data = $this->request->getJSON(true); 
+      
         if (!$this->validate([
             'name'        => 'required',
             'price'       => 'required|numeric'
@@ -49,14 +50,13 @@ class ProductController extends ResourceController
 
     public function update($id = null)
     {
-        $data = $this->request->getRawInput(); // Get PUT data
+        $data = $this->request->getJSON(); // Get PUT data
         if (!$this->validate([
             'name'  => 'required',
             'price' => 'required|numeric'
         ])) {
             return $this->fail($this->validator->getErrors());
         }
-
         $product = $this->model->find($id);
         if ($product) {
             $this->model->update($id, $data);
@@ -66,31 +66,43 @@ class ProductController extends ResourceController
         }
     }
 
-    public function patch($id = null)
-    {
-        $data = $this->request->getRawInput();
+    public function updateProduct($id = null)
+{
+    $data = $this->request->getJSON();
 
-        $product = $this->model->find($id);
+    $product = $this->model->find($id);
 
-        if (!$product) {
-            return $this->failNotFound('Product not found');
-        }
-
-        // Merge the existing data with the new PATCH data
-        $updatedData = array_merge($product, $data);
-
-        // Optional: You can validate only the fields that are passed
-        if (!$this->validate([
-            'name'  => 'permit_empty|string',
-            'price' => 'permit_empty|numeric'
-        ])) {
-            return $this->fail($this->validator->getErrors());
-        }
-
-        $this->model->update($id, $updatedData);
-
-        return $this->respond($updatedData);
+    if (!$product) {
+        return $this->failNotFound('Product not found');
     }
+
+    if (!$data) {
+        return $this->failValidationError('No data to update');
+    }
+
+    $updatedData = array_merge($product, (array) $data);
+
+    $validationRules = [];
+
+    if (isset($data->name)) {
+        $validationRules['name'] = 'permit_empty|string';
+    }
+
+    if (isset($data->description)) {
+        $validationRules['description'] = 'permit_empty|string';
+    }
+
+    if (isset($data->price)) {
+        $validationRules['price'] = 'permit_empty|numeric';
+    }
+
+    if (!empty($validationRules) && !$this->validate($validationRules)) {
+        return $this->fail($this->validator->getErrors());
+    }
+    $this->model->update($id, $updatedData);
+
+    return $this->respond($updatedData);
+}
 
 
     public function delete($id = null)
